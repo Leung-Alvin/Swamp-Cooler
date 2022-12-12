@@ -46,7 +46,7 @@ volatile unsigned int* my_ADC_DATA = (unsigned int*) 0x78;
 LiquidCrystal lcd(12,11,5,4,3,2);
 #define DHTTYPE DHT11
 #define WLDPIN 0 //Analog pin connected to water detection sensor
-#define DHTPIN 14 //Digital pin connected to the DHT sensor
+#define DHTPIN 13 //Digital pin connected to the DHT sensor
 #define FANPIN 9
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -78,17 +78,17 @@ void loop()
   
   lcd.setCursor(0, 0); //First line in LCD Display
   unsigned int adc_reading = adc_read(WLDPIN); //Read the analog pin for water level
-  //CODE IS FOR DHT in order to READ HUMIDITY AND TEMP
-  /* float h = dht.readHumidity(); //reads humidity
+  float h = dht.readHumidity(); //reads humidity
   float t = dht.readTemperature(); //reads temperature as celsius
   float f = dht.readTemperature(true); //reads temperature as fahrenheit
   if (isnan(h) || isnan(t) || isnan(f)) {
     Serial.println(F("Failed to read from DHT sensor!"));
   }
   lcd.print(f);
-  lcd.print("°F ");
+  lcd.print("F ");
   lcd.print(h);
-  lcd.print("% "); */
+  lcd.print("% ");
+  //lcd.print 
   lcd.setCursor(0, 1); //Moves to second line of LCD Display
   if(adc_reading <= water_level_threshold){ //ADC reads water is lower than low level and prints
     lcd.println("LOW");
