@@ -19,6 +19,11 @@
 #define RDA 0x80
 #define TBE 0x20  
 
+#define WRITE_HIGH_PB(pin_num)  *port_b |= (0x01 << pin_num);
+#define WRITE_LOW_PB(pin_num)  *port_b &= ~(0x01 << pin_num);
+#define WRITE_HIGH_PH(pin_num)  *port_h |= (0x01 << pin_num);
+#define WRITE_LOW_PH(pin_num)  *port_h &= ~(0x01 << pin_num);
+
 volatile unsigned char* port_b = (unsigned char*) 0x25; 
 volatile unsigned char* ddr_b  = (unsigned char*) 0x24; 
 volatile unsigned char* pin_b  = (unsigned char*) 0x23; 
@@ -45,13 +50,13 @@ LiquidCrystal lcd(12,11,5,4,3,2);
 #define FANPIN 9
 DHT dht(DHTPIN, DHTTYPE);
 
-//PB7 = 13
-//PH6 = 9
+//PB7 = 13 0x80
+//PH6 = 9 0010 0000 -> 0x20
 
 int water_level_threshold = 100; //If below then water level is too low
 int temp_threshold_high = 100; // High Fahrenheit
 int temp_threshold_low = 0; // Low Fahrenheit
-int curTemp; //Maintain current temperature
+int curTemp = 105; //Maintain current temperature
 void setup() 
 {
   U0init(9600); //Serial Begin
@@ -64,11 +69,11 @@ void setup()
 void loop() 
 {
 
-  if(curTemp > temp_threshold_high){ //Turn fan on if greater than high temp threshold
-    turnFanOn(9,100);
+  if(curTemp >= temp_threshold_high){ //Turn fan on if greater than high temp threshold
+    turnFanOn();
   }
   else if(curTemp < temp_threshold_low){ //Turn fan off if less than low temp threshold
-    turnFanOff(9);
+    turnFanOff();
   }
   
   lcd.setCursor(0, 0); //First line in LCD Display
@@ -195,13 +200,12 @@ void U0putchar(unsigned char U0pdata)
 }
 
 //Turns fan on
-void turnFanOn(int pin, int speed){
-  analogWrite(pin,speed); //Writes an analog value to pin for a given speed
+void turnFanOn(){
+  WRITE_HIGH_PH(6); //0010 0000
 }
 //Turns fan off
-void turnFanOff(int pin){
-  analogWrite(pin, 0); //Writes 0 to pin
+void turnFanOff(){
+  WRITE_LOW_PH(6);
 }
-
 
 
