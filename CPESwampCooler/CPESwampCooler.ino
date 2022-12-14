@@ -87,8 +87,8 @@ IRrecv irrecv(irPort);  //12 -> PB_6
 //PB7 = 13 0x80
 //PH6 = 9 0010 0000 -> 0x20
 
-int water_level_threshold = 100; //If below then water level is too low
-float temp_threshold = 100; // High Fahrenheit
+int water_level_threshold = 20; //If below then water level is too low
+float temp_threshold = 75; // High Fahrenheit
 int curWat; //current water level
 unsigned long previousMillis = 0;
 void setup(){
