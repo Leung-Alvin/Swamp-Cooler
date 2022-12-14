@@ -113,8 +113,7 @@ void loop()
     processIR();
   }
 
-
-  //state_check(curState);
+  state_check(curState);
 }
 
 void printLogTime(){
@@ -322,7 +321,7 @@ void processIR(){
         }
         break;
       case 0x45: //power - on/off
-        if(curState = 0){
+        if(curState == 0){
           set_state(1);
         } else {
           set_state(0);
