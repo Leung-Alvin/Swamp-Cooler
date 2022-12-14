@@ -27,6 +27,19 @@
 #define WRITE_LOW_PH(pin_num)  *port_h &= ~(0x01 << pin_num);
 #define WRITE_HIGH_PE(pin_num) *port_e |= (0x01 << pin_num);
 #define WRITE_LOW_PE(pin_num)  *port_e &= ~(0x01 << pin_num);
+#define WRITE_HIGH_PG(pin_num) *port_g |= (0x01 << pin_num);
+#define WRITE_LOW_PG(pin_num)  *port_g &= ~(0x01 << pin_num);
+#define WRITE_HIGH_PA(pin_num) *port_a |= (0x01 << pin_num);
+#define WRITE_LOW_PA(pin_num)  *port_a &= ~(0x01 << pin_num);
+#define ALL_LIGHTS_DOWN() *port_a &= ~(0x55);
+
+volatile unsigned char* port_a = (unsigned char*) 0x22; 
+volatile unsigned char* ddr_a  = (unsigned char*) 0x21; 
+volatile unsigned char* pin_a  = (unsigned char*) 0x20;
+
+volatile unsigned char* port_g = (unsigned char*) 0x34; 
+volatile unsigned char* ddr_g  = (unsigned char*) 0x33; 
+volatile unsigned char* pin_g  = (unsigned char*) 0x32; 
 
 volatile unsigned char* port_e = (unsigned char*) 0x2E; 
 volatile unsigned char* ddr_e  = (unsigned char*) 0x2D; 
@@ -72,6 +85,7 @@ void setup()
   lcd.begin(16,2); //Turn on LCD
   *ddr_b |= 0x80; //Turn on BUILT_IN_LED
   *ddr_e |= 0x08; //Turn on Fan Motor 0000 1000
+  *ddr_a |= 0x55; //Turn on DDR A (Lights)
   dht.begin(); //Start DHT
   adc_init(); //Start ADC and Water Level Sampling
 }
@@ -105,6 +119,15 @@ void loop()
     lcd.println("GOOD ");
   }
   delay(1000);
+  turnLightOn(6);
+  delay(1000);
+  turnLightOn(4);
+  delay(1000);
+  turnLightOn(2);
+  delay(1000);
+  turnLightOn(0);
+  delay(1000);
+
 }
 void adc_init()
 {
@@ -216,4 +239,15 @@ void turnFanOff(){
   WRITE_LOW_PE(4);
 }
 
+/*a function that takes 
+a, a number 0-6 (Even only) and switches to letting that led be on
+Yellow 6
+Green 4
+Red 2
+Blue 0
+*/
+void turnLightOn(int a){
+  ALL_LIGHTS_DOWN(); //Shut down all Lights
+  WRITE_HIGH_PA(a); //TUrn on only ONE light
+}
 
