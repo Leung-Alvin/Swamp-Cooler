@@ -9,6 +9,8 @@
 //1N4001 Diode
 //270 Ohms Resistor
 
+
+
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <DHT_U.h>
@@ -23,6 +25,13 @@
 #define WRITE_LOW_PB(pin_num)  *port_b &= ~(0x01 << pin_num);
 #define WRITE_HIGH_PH(pin_num)  *port_h |= (0x01 << pin_num);
 #define WRITE_LOW_PH(pin_num)  *port_h &= ~(0x01 << pin_num);
+#define WRITE_HIGH_PE(pin_num) *port_e |= (0x01 << pin_num);
+#define WRITE_LOW_PE(pin_num)  *port_e &= ~(0x01 << pin_num);
+
+volatile unsigned char* port_e = (unsigned char*) 0x2E; 
+volatile unsigned char* ddr_e  = (unsigned char*) 0x2D; 
+volatile unsigned char* pin_e  = (unsigned char*) 0x2C; 
+
 
 volatile unsigned char* port_b = (unsigned char*) 0x25; 
 volatile unsigned char* ddr_b  = (unsigned char*) 0x24; 
@@ -43,44 +52,43 @@ volatile unsigned char* my_ADCSRB = (unsigned char*) 0x7B;
 volatile unsigned char* my_ADCSRA = (unsigned char*) 0x7A;
 volatile unsigned int* my_ADC_DATA = (unsigned int*) 0x78;
 
-LiquidCrystal lcd(12,11,5,4,3,2);
+LiquidCrystal lcd(53,51,49,47,45,43);
 #define DHTTYPE DHT11
 #define WLDPIN 0 //Analog pin connected to water detection sensor
-#define DHTPIN 13 //Digital pin connected to the DHT sensor
-#define FANPIN 9
+#define DHTPIN 52 //Digital pin connected to the DHT sensor
+#define FANPIN 2
 DHT dht(DHTPIN, DHTTYPE);
 
 //PB7 = 13 0x80
 //PH6 = 9 0010 0000 -> 0x20
 
 int water_level_threshold = 100; //If below then water level is too low
-int temp_threshold_high = 100; // High Fahrenheit
-int temp_threshold_low = 0; // Low Fahrenheit
-int curTemp = 105; //Maintain current temperature
+int temp_threshold_high = 70; // High Fahrenheit
+int temp_threshold_low = 60; // Low Fahrenheit
+int curTemp; //Maintain current temperature
 void setup() 
 {
   U0init(9600); //Serial Begin
   lcd.begin(16,2); //Turn on LCD
   *ddr_b |= 0x80; //Turn on BUILT_IN_LED
-  *ddr_h |= 0x20; //Turn on Fan Motor
+  *ddr_e |= 0x08; //Turn on Fan Motor 0000 1000
   dht.begin(); //Start DHT
   adc_init(); //Start ADC and Water Level Sampling
 }
 void loop() 
 {
-
-  if(curTemp >= temp_threshold_high){ //Turn fan on if greater than high temp threshold
-    turnFanOn();
-  }
-  else if(curTemp < temp_threshold_low){ //Turn fan off if less than low temp threshold
-    turnFanOff();
-  }
   
   lcd.setCursor(0, 0); //First line in LCD Display
   unsigned int adc_reading = adc_read(WLDPIN); //Read the analog pin for water level
   float h = dht.readHumidity(); //reads humidity
   float t = dht.readTemperature(); //reads temperature as celsius
   float f = dht.readTemperature(true); //reads temperature as fahrenheit
+  if(f >= temp_threshold_high){ //Turn fan on if greater than high temp threshold
+    turnFanOn();
+  }
+  else if(f < temp_threshold_low){ //Turn fan off if less than low temp threshold
+    turnFanOff();
+  }
   if (isnan(h) || isnan(t) || isnan(f)) {
     Serial.println(F("Failed to read from DHT sensor!"));
   }
@@ -201,11 +209,11 @@ void U0putchar(unsigned char U0pdata)
 
 //Turns fan on
 void turnFanOn(){
-  WRITE_HIGH_PH(6); //0010 0000
+  WRITE_HIGH_PE(4); 
 }
 //Turns fan off
 void turnFanOff(){
-  WRITE_LOW_PH(6);
+  WRITE_LOW_PE(4);
 }
 
 
