@@ -1,14 +1,5 @@
-//Physical Circuit Equipment
-//LCD 16x2
-//DHT11 Sensor
-//Water Level Detector
-//10K Potentiometer
-//10K Ohms Resistor
-//Fan Blades & Motor
-//PN2222 Transistor
-//1N4001 Diode
-//270 Ohms Resistor
-
+//Kameron Bettridge
+//Alvin Leung
 #include <DHT.h>
 #include <LiquidCrystal.h>
 #include <DS3231.h>
@@ -110,19 +101,20 @@ void setup(){
   adc_init(); //Start ADC and Water Level Sampling
   clock.begin();
   irrecv.enableIRIn();
-  
 }
 
 
 
 void loop() 
 { 
+
   if(irrecv.decode()){
+    
     processIR();
   }
 
 
-  state_check(curState);
+  //state_check(curState);
 }
 
 void printLogTime(){
@@ -140,7 +132,6 @@ void state_check(int state){
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis >= 4000) { //if a minute has passed
       previousMillis = currentMillis;
-
     }
     lcd.setCursor(0, 0); //First line in LCD Display
 
