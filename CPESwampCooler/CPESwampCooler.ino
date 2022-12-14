@@ -198,7 +198,7 @@ void set_state(int state){
     break;
   //Running State - Fan on
   case 2:
-  
+
     turnFanOn();
     printLogTime();
     U0putstr("Changing to Running\n");
@@ -341,6 +341,8 @@ void processIR(){
       case 0x47: //func/stop - reset button
         if(curWat > water_level_threshold){
           set_state(1);
+          lcd.setCursor(0, 1);
+          lcd.print("          ");
         }
         break;
     }
