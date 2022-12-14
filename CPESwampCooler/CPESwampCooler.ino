@@ -310,7 +310,6 @@ void turnLightOn(int a){
 }
 
 void processIR(){
-    Serial.println(irrecv.decodedIRData.command, HEX);
     switch(irrecv.decodedIRData.command){
       case 0x46: //VOL+
         if(curState){
