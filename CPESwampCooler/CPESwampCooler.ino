@@ -97,9 +97,9 @@ IRrecv irrecv(irPort);  //12 -> PB_6
 //PH6 = 9 0010 0000 -> 0x20
 
 int water_level_threshold = 100; //If below then water level is too low
-int temp_threshold_high = 100; // High Fahrenheit
-int temp_threshold_low = 0; // Low Fahrenheit
-int curTemp; //Maintain current temperature
+float temp_threshold = 100; // High Fahrenheit
+int curWat; //current water level
+unsigned long previousMillis = 0;
 void setup(){
   U0init(9600); //Serial Begin
   lcd.begin(16,2); //Turn on LCD
@@ -122,9 +122,9 @@ void loop()
   }
 
 
-  set_state(curState);
-  delay(2000);//60000 is a minute
+  state_check(curState);
 }
+
 void printLogTime(){
   dt = clock.getDateTime();
   char timeStr[22];
@@ -132,30 +132,85 @@ void printLogTime(){
   U0putstr(timeStr);
 }
 
+void state_check(int state){
+  if(state == 1 || state == 2){
+    float curHum = dht.readHumidity(); //reads humidity
+    float curTemp = dht.readTemperature(true); //reads temperature as fahrenheit
+    curWat = adc_read(WLDPIN);
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= 4000) { //if a minute has passed
+      previousMillis = currentMillis;
+
+    }
+    lcd.setCursor(0, 0); //First line in LCD Display
+
+    if (isnan(curHum) || isnan(curTemp)) { //Checks if DHT reads wrong input and to try again
+      U0putstr("Failed to read from DHT sensor!");
+    }
+    lcd.print(curTemp);
+    lcd.print("F ");
+    lcd.print(curHum);
+    lcd.print("% ");
+    
+
+    if(state == 1){ //idle
+      if(curTemp > temp_threshold){
+        curState = 2; //set to running
+        set_state(curState);
+      }
+      if(curWat <= water_level_threshold){
+        curState = 3; //set to error
+        set_state(curState);
+      }
+    }
+
+    if(state == 2){ //running
+      if(curTemp <= temp_threshold){
+        curState = 1; //set to idle
+        set_state(curState);
+      }
+      if(curWat < water_level_threshold){
+        curState = 3; //set to error
+        set_state(curState);
+      }
+    }
+  } 
+  if(state == 3){
+    curWat = adc_read(WLDPIN);
+  }
+}
+
 void set_state(int state){
   switch (state){
   //Disabled State, no monitoring of temp/water. Start button monitored with ISR
   case 0:
+    turnFanOff();
     printLogTime();
     U0putstr("Changing to Disabled\n");
     turnLightOn(YELLOWLED);
     break;
   //Idle State - water/temp should be monitored
   case 1:
+    turnFanOff();
     printLogTime();
     U0putstr("Changing to Idle\n");
     turnLightOn(GREENLED);
     break;
   //Running State - Fan on
   case 2:
+  
+    turnFanOn();
     printLogTime();
     U0putstr("Changing to Running\n");
     turnLightOn(BLUELED);
     break;
   //Error State - Regardless of temperature, fan is off
   case 3:
+    turnFanOff();
     printLogTime();
     U0putstr("Changing to Error\n");
+    lcd.setCursor(0, 1);
+    lcd.print("Water Low!");
     turnLightOn(REDLED);
     break;
   }
@@ -255,18 +310,38 @@ void turnLightOn(int a){
 }
 
 void processIR(){
+    Serial.println(irrecv.decodedIRData.command, HEX);
     switch(irrecv.decodedIRData.command){
       case 0x46: //VOL+
-        small_stepper.setSpeed(500); //Max seems to be 500
-        stepSize = 2048;  // Rotate CW
-        small_stepper.step(stepSize);
-        delay(2000); 
+        if(curState){
+          printLogTime();
+          U0putstr("Opening Vent With Stepper Motor\n");
+          small_stepper.setSpeed(500); //Max seems to be 500
+          stepSize = 2048;  // Rotate CW
+          small_stepper.step(stepSize);
+          delay(2000);
+        }
         break;
       case 0x15: //VOL-
-        small_stepper.setSpeed(500);
-        stepSize = -2048;  // Rotate CCW
-        small_stepper.step(stepSize);
-        delay(2000); 
+        if(curState){
+          small_stepper.setSpeed(500);
+          U0putstr("Closing Vent With Stepper Motor\n");
+          stepSize = -2048;  // Rotate CCW
+          small_stepper.step(stepSize);
+          delay(2000); 
+        }
+        break;
+      case 0x45: //power - on/off
+        if(curState = 0){
+          set_state(1);
+        } else {
+          set_state(0);
+        }
+        break;
+      case 0x47: //func/stop - reset button
+        if(curWat > water_level_threshold){
+          set_state(1);
+        }
         break;
     }
     irrecv.resume();
