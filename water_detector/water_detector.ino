@@ -17,21 +17,27 @@
 // REQUIRES the following Arduino libraries:
 // - DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
 // - Adafruit Unified Sensor Lib: https://github.com/adafruit/Adafruit_Sensor
+
+
 #include <LiquidCrystal.h>
 #define RDA 0x80
 #define TBE 0x20  
 
 #define WRITE_HIGH_PB(pin_num)  *port_b |= (0x01 << pin_num);
 #define WRITE_LOW_PB(pin_num)  *port_b &= ~(0x01 << pin_num);
+
 #define WRITE_HIGH_PH(pin_num)  *port_h |= (0x01 << pin_num);
 #define WRITE_LOW_PH(pin_num)  *port_h &= ~(0x01 << pin_num);
+
 #define WRITE_HIGH_PE(pin_num) *port_e |= (0x01 << pin_num);
 #define WRITE_LOW_PE(pin_num)  *port_e &= ~(0x01 << pin_num);
+
 #define WRITE_HIGH_PG(pin_num) *port_g |= (0x01 << pin_num);
 #define WRITE_LOW_PG(pin_num)  *port_g &= ~(0x01 << pin_num);
+
 #define WRITE_HIGH_PA(pin_num) *port_a |= (0x01 << pin_num);
 #define WRITE_LOW_PA(pin_num)  *port_a &= ~(0x01 << pin_num);
-#define ALL_LIGHTS_DOWN() *port_a &= ~(0x55);
+#define ALL_LIGHTS_DOWN()      *port_a &= ~(0x55);
 
 volatile unsigned char* port_a = (unsigned char*) 0x22; 
 volatile unsigned char* ddr_a  = (unsigned char*) 0x21; 
@@ -70,6 +76,10 @@ LiquidCrystal lcd(53,51,49,47,45,43);
 #define WLDPIN 0 //Analog pin connected to water detection sensor
 #define DHTPIN 52 //Digital pin connected to the DHT sensor
 #define FANPIN 2
+#define BLUELEDPIN 22;
+#define REDLEDPIN 24;
+#define GREENLEDPIN 26;
+#define YELLOWLEDPIN 28;
 DHT dht(DHTPIN, DHTTYPE);
 
 //PB7 = 13 0x80
@@ -103,7 +113,7 @@ void loop()
   else if(f < temp_threshold_low){ //Turn fan off if less than low temp threshold
     turnFanOff();
   }
-  if (isnan(h) || isnan(t) || isnan(f)) {
+  if (isnan(h) || isnan(t) || isnan(f)) { //Checks if DHT reads wrong input and to try again
     Serial.println(F("Failed to read from DHT sensor!"));
   }
   lcd.print(f);
@@ -118,6 +128,7 @@ void loop()
   else if (adc_reading > water_level_threshold){  //ADC reads water is higher than low level and prints
     lcd.println("GOOD ");
   }
+  /* Test Code Color
   delay(1000);
   turnLightOn(6);
   delay(1000);
@@ -127,6 +138,7 @@ void loop()
   delay(1000);
   turnLightOn(0);
   delay(1000);
+  */
 
 }
 void adc_init()
