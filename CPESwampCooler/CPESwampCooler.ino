@@ -129,7 +129,7 @@ void state_check(int state){
     float curTemp = dht.readTemperature(true); //reads temperature as fahrenheit
     curWat = adc_read(WLDPIN);
     unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= 4000) { //if a minute has passed
+    if (currentMillis - previousMillis >= 60000) { //if a minute has passed
       previousMillis = currentMillis;
     }
     lcd.setCursor(0, 0); //First line in LCD Display
@@ -171,6 +171,7 @@ void state_check(int state){
 }
 
 void set_state(int state){
+  curState = state;
   switch (state){
   //Disabled State, no monitoring of temp/water. Start button monitored with ISR
   case 0:
